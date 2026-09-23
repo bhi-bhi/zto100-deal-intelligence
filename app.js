@@ -76,7 +76,7 @@ function migrate(raw){
   // One-off data migration: add Henrik Fruergaard Rasmussen as a strategic potential for Unlimit.
   let henrik=s.investors.find(i=>(i.name||'').trim().toLowerCase()==='henrik fruergaard rasmussen');
   if(!henrik){
-    henrik={id:'INV-HENRIK-FRUERGAARD',name:'Henrik Fruergaard Rasmussen',company:'HENRIK FRUERGAARD ApS',capacity:'Betydelig balance – ticket ikke verificeret',relation:'Strategisk investor / netværk',status:'Research',notes:'Dokumenteret erfaring og selskabsrelationer inden for investering/holding, ejendom, detailhandel og motorbrændstof. Relevant både som mulig investor og netværksåbner. LinkedIn: https://www.linkedin.com/in/fruergaard/'};
+    henrik={id:'INV-HENRIK-FRUERGAARD',name:'Henrik Fruergaard Rasmussen',company:'HENRIK FRUERGAARD ApS',capacity:'Meget kapitalstærk; 2025 EK ca. 598,7 mio. kr., likvider ca. 10,0 mio. kr. Ticket ikke verificeret',relation:'Strategisk investor / netværk',status:'Research',notes:'Dokumenteret erfaring og selskabsrelationer inden for investering/holding, ejendom, detailhandel og motorbrændstof. Relevant både som mulig investor og netværksåbner. 2025 holdingselskab: resultat ca. 67,0 mio. kr., aktiver ca. 605,5 mio. kr., egenkapital ca. 598,7 mio. kr., gæld ca. 6,8 mio. kr., likvider ca. 10,0 mio. kr. Høj balanceformue, men kontant ticket skal verificeres. LinkedIn: https://www.linkedin.com/in/fruergaard/'};
     s.investors.push(henrik);
   }
   if(unlimit&&!s.matches.some(m=>m.caseId===unlimit.id&&m.investorId===henrik.id)){
