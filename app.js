@@ -72,6 +72,16 @@ function migrate(raw){
   if(unlimit&&!s.matches.some(m=>m.caseId===unlimit.id&&m.investorId===frank.id)){
     s.matches.push({id:'M-FRANK-UNLIMIT',caseId:unlimit.id,investorId:frank.id,status:'Not contacted',priority:'B',fit:3,ticket:'Ikke fastsat',next:'Send Messenger-henvendelse',dueDate:'',notes:'Fokus i dialogen: skaleringspotentiale samt risk/reward i låne- og warrantstrukturen.'});
   }
+
+  // One-off data migration: add Henrik Fruergaard Rasmussen as a strategic potential for Unlimit.
+  let henrik=s.investors.find(i=>(i.name||'').trim().toLowerCase()==='henrik fruergaard rasmussen');
+  if(!henrik){
+    henrik={id:'INV-HENRIK-FRUERGAARD',name:'Henrik Fruergaard Rasmussen',company:'HENRIK FRUERGAARD ApS',capacity:'Betydelig balance – ticket ikke verificeret',relation:'Strategisk investor / netværk',status:'Research',notes:'Dokumenteret erfaring og selskabsrelationer inden for investering/holding, ejendom, detailhandel og motorbrændstof. Relevant både som mulig investor og netværksåbner. LinkedIn: https://www.linkedin.com/in/fruergaard/'};
+    s.investors.push(henrik);
+  }
+  if(unlimit&&!s.matches.some(m=>m.caseId===unlimit.id&&m.investorId===henrik.id)){
+    s.matches.push({id:'M-HENRIK-FRUERGAARD-UNLIMIT',caseId:unlimit.id,investorId:henrik.id,status:'Not contacted',priority:'A',fit:4,ticket:'Ikke fastsat',next:'Afklar relation/intro og kontakt Henrik',dueDate:'',notes:'Unlimit-fit: stærk potentiel kombination af kapital, skaleringserfaring og netværk. Særligt relevant pga. dokumenteret eksponering mod detailhandel, motorbrændstof, ejendom og investering. Netværksværdien kan være høj i forhold til retail, service stations, ejendom/lokationer og co-investorer. Verificér konkret investeringsappetit, foretrukken ticket og aktive relationer før pitch.'});
+  }
   return s;
 }
 let state=migrate(JSON.parse(localStorage.getItem(KEY)||'null'));
