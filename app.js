@@ -1,4 +1,4 @@
-const STAGES=['Not contacted','Intro needed','Contacted','Meeting','Dialogue','Committed'];
+const STAGES=['Not contacted','Intro needed','Contacted','Meeting','Dialogue','Committed','Declined'];
 const CASE_STATUSES=['Preparation','Active','On hold','Closed'];
 const INVESTOR_STATUSES=['Research','Qualified','Inactive'];
 const KEY='zto100-v1';
@@ -157,7 +157,7 @@ function pipelineView(id=currentCase){
     '<div class="notice">Træk investorkort mellem kolonnerne på desktop, eller brug ← / →. Klik Redigér for status, prioritet, fit, ticket, næste handling, dato og noter.</div>'+
     '<div class="kanban" id="kanban">'+STAGES.map(s=>{
       const list=data.filter(m=>m.status===s);
-      return '<div class="col" data-stage="'+esc(s)+'"><div class="colhead"><b>'+esc(s)+'</b><span class="chip">'+list.length+'</span></div>'+(list.map(dealCard).join('')||'<div class="empty">Slip kort her</div>')+'</div>'
+      const label=s==='Declined'?'Afvist':s; return '<div class="col '+(s==='Declined'?'declinedcol':'')+'" data-stage="'+esc(s)+'"><div class="colhead"><b>'+esc(label)+'</b><span class="chip">'+list.length+'</span></div>'+(list.map(dealCard).join('')||'<div class="empty">Slip kort her</div>')+'</div>'
     }).join('')+'</div>';
   $('#caseSel').onchange=e=>pipelineView(e.target.value);
   $('#addInvestorToCase').onclick=()=>openAddInvestorToCase(c.id);
