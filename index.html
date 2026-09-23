@@ -163,13 +163,15 @@
 
 <dialog id="addInvestorModal" class="modal">
   <form id="addInvestorForm" class="modalbody">
-    <h3>Tilføj investor til case</h3>
-    <p class="meta">Vælg fra den fælles Investor Master.</p>
-    <div class="form">
-      <label><span>Investor</span><select id="addInvestorSelect" name="investorId"></select></label>
-      <div id="addInvestorEmpty" class="notice hidden">Alle investorer er allerede tilføjet til denne case.</div>
+    <h3>Tilføj investorer til case</h3>
+    <p class="meta">Vælg én eller flere fra den fælles Investor Master.</p>
+    <div id="addInvestorPicker" class="form">
+      <input id="addInvestorSearch" placeholder="Søg investor eller virksomhed...">
+      <div class="pickerbar"><span id="addInvestorCount" class="meta">0 valgt</span><div><button type="button" class="mini" id="selectAllInvestors">Vælg alle</button><button type="button" class="mini" id="clearInvestorSelection">Ryd</button></div></div>
+      <div id="addInvestorList" class="checklist"></div>
     </div>
-    <div class="modalactions"><span></span><div class="right"><button type="button" class="secondary" data-close>Annuller</button><button type="submit" class="primary">Tilføj</button></div></div>
+    <div id="addInvestorEmpty" class="notice hidden">Alle investorer er allerede tilføjet til denne case.</div>
+    <div class="modalactions"><span></span><div class="right"><button type="button" class="secondary" data-close>Annuller</button><button type="submit" class="primary">Tilføj valgte</button></div></div>
   </form>
 </dialog>
 
