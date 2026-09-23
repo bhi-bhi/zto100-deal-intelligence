@@ -60,6 +60,18 @@ function migrate(raw){
   s.investors=(s.investors||seed.investors).map(i=>({...i,status:i.status||'Research',capacity:i.capacity||'',company:i.company||'',relation:i.relation||'',notes:i.notes||''}));
   s.candidates=(s.candidates||seed.candidates).map(c=>({...c,status:c.status||'Research',company:c.company||'',notes:c.notes||''}));
   s.matches=(s.matches||[]).map(m=>({...m,status:STAGES.includes(m.status)?m.status:'Not contacted',priority:m.priority||'B',fit:Number(m.fit)||3,ticket:m.ticket||'Ikke fastsat',next:m.next||'',dueDate:m.dueDate||'',notes:m.notes||''}));
+
+  // One-off data migration: promote Frank Waller from Candidate Pool and add him to the Unlimit case.
+  let frank=s.investors.find(i=>(i.name||'').trim().toLowerCase()==='frank waller');
+  if(!frank){
+    frank={id:'INV-FRANK-WALLER',name:'Frank Waller',company:'BERING TIME / BERING Group',capacity:'',relation:'',status:'Research',notes:'Interesse: skaleringspotentiale. Første kontakt planlagt via Messenger.'};
+    s.investors.push(frank);
+  }
+  s.candidates=s.candidates.filter(c=>(c.name||'').trim().toLowerCase()!=='frank waller');
+  const unlimit=s.cases.find(c=>c.slug==='unlimit')||s.cases.find(c=>c.id==='CASE-001');
+  if(unlimit&&!s.matches.some(m=>m.caseId===unlimit.id&&m.investorId===frank.id)){
+    s.matches.push({id:'M-FRANK-UNLIMIT',caseId:unlimit.id,investorId:frank.id,status:'Not contacted',priority:'B',fit:3,ticket:'Ikke fastsat',next:'Send Messenger-henvendelse',dueDate:'',notes:'Fokus i dialogen: skaleringspotentiale samt risk/reward i låne- og warrantstrukturen.'});
+  }
   return s;
 }
 let state=migrate(JSON.parse(localStorage.getItem(KEY)||'null'));
