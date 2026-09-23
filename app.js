@@ -80,7 +80,7 @@ function migrate(raw){
     s.investors.push(henrik);
   }
   if(unlimit&&!s.matches.some(m=>m.caseId===unlimit.id&&m.investorId===henrik.id)){
-    s.matches.push({id:'M-HENRIK-FRUERGAARD-UNLIMIT',caseId:unlimit.id,investorId:henrik.id,status:'Not contacted',priority:'A',fit:4,ticket:'Ikke fastsat',next:'Afklar relation/intro og kontakt Henrik',dueDate:'',notes:'Unlimit-fit: stærk potentiel kombination af kapital, skaleringserfaring og netværk. Særligt relevant pga. dokumenteret eksponering mod detailhandel, motorbrændstof, ejendom og investering. Netværksværdien kan være høj i forhold til retail, service stations, ejendom/lokationer og co-investorer. Verificér konkret investeringsappetit, foretrukken ticket og aktive relationer før pitch.'});
+    s.matches.push({id:'M-HENRIK-FRUERGAARD-UNLIMIT',caseId:unlimit.id,investorId:henrik.id,status:'Not contacted',priority:'A',fit:4,ticket:'Ikke fastsat',next:'Afklar relation/intro og kontakt Henrik',dueDate:'',notes:'Unlimit-fit: stærk potentiel kombination af kapital, skaleringserfaring og netværk. Særligt relevant pga. dokumenteret eksponering mod detailhandel, motorbrændstof, ejendom og investering. Dokumenterede netværksspor: Nicolai Jung/KAALAS via Seneca Invest; Michael Bjerre Jakobsen og Mathias Bjerre Jakobsen via BF Engros; Sammi Jørgensen og Bo Søndergaard Pedersen via H & S; samt historisk transaktionsnetværk omkring Truckwash/WASH GROUP med Mads Yde Jensen, Mikkel Merrild, Morten Kehlet Merrild, Jimmy Kronborg Mølgaard og Morten Søby Vagnholm. Strategisk værdi: mulige co-investorer, retail/food, ejendom/lokationer, mobility/forecourt og introduktioner. Verificér konkret investeringsappetit, foretrukken ticket og aktive relationer før pitch.'});
   }
   return s;
 }
