@@ -69,6 +69,8 @@ let editing={type:null,id:null};
 let draggedMatchId=null;
 let addInvestorSelection=new Set();
 let addInvestorAvailable=[];
+let researchBusy=false;
+let researchResults=state.researchResults||[];
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
 const inv=id=>state.investors.find(x=>x.id===id);
 const cas=id=>state.cases.find(x=>x.id===id);
@@ -166,6 +168,90 @@ function pipelineView(id=currentCase){
   wireDnD();
 }
 
+
+function researchView(){
+  head('AI Research','Investor intelligence','Find nye investorer og gem relevante resultater i Candidate Pool.');
+  const caseOptions=['<option value="">Ingen specifik case</option>'].concat(state.cases.map(c=>option(c.id,c.name,''))).join('');
+  $('#view').innerHTML=
+    '<div class="research-shell">'+
+      '<div class="panel research-panel">'+
+        '<div class="research-head"><div><h3>Research nye investorer</h3><p class="meta">Beskriv hvem du leder efter. AI Research bruger live web search og viser kilder.</p></div><span class="chip">AI + web</span></div>'+
+        '<div class="form">'+
+          '<label><span>Research-opgave</span><textarea id="researchPrompt" placeholder="Fx: Find 15 potentielle investorer i Sønderjylland med dokumenteret erhvervsformue og interesse for tech, retail eller SaaS."></textarea></label>'+
+          '<div class="formgrid"><label><span>Knyt til case (valgfrit)</span><select id="researchCase">'+caseOptions+'</select></label><label><span>Antal kandidater</span><select id="researchLimit"><option>5</option><option selected>10</option><option>15</option><option>20</option></select></label></div>'+
+          '<button id="runResearch" class="primary" type="button">'+(researchBusy?'Research kører…':'Start research')+'</button>'+
+          '<div id="researchMessage" class="help"></div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="section"><h2>Research Results</h2><span class="meta">'+researchResults.length+' resultater</span></div>'+
+      '<div id="researchResults" class="research-results">'+renderResearchResults()+'</div>'+
+    '</div>';
+  const btn=$('#runResearch');
+  if(researchBusy) btn.disabled=true;
+  btn.onclick=runResearch;
+}
+function renderResearchResults(){
+  if(!researchResults.length) return '<div class="empty">Ingen research-resultater endnu.</div>';
+  return researchResults.map((r,idx)=>{
+    const sources=(r.sources||[]).map(x=>'<a class="source-link" href="'+esc(x.url)+'" target="_blank" rel="noopener">'+esc(x.title||x.url)+'</a>').join('');
+    return '<div class="panel research-card">'+
+      '<div class="research-card-top"><div><h3>'+esc(r.name||'Ukendt')+'</h3><div class="meta">'+esc(r.company||'')+(r.location?' · '+esc(r.location):'')+'</div></div><span class="chip">'+esc(r.confidence||'Mellem')+'</span></div>'+
+      '<div class="research-grid"><div><small>Rolle</small><b>'+esc(r.role||'—')+'</b></div><div><small>Kapacitet</small><b>'+esc(r.capacity||'Ikke vurderet')+'</b></div></div>'+
+      '<p class="research-rationale">'+esc(r.rationale||'')+'</p>'+
+      (sources?'<div class="source-list">'+sources+'</div>':'')+
+      '<div class="research-actions"><button class="secondary" data-add-research-candidate="'+idx+'">Tilføj til Candidate Pool</button></div>'+
+    '</div>';
+  }).join('');
+}
+async function runResearch(){
+  const prompt=($('#researchPrompt').value||'').trim();
+  if(!prompt){$('#researchMessage').textContent='Skriv først hvad du vil have researched.';return}
+  const caseId=$('#researchCase').value;
+  const c=caseId?cas(caseId):null;
+  const limit=Number($('#researchLimit').value)||10;
+  researchBusy=true;researchView();
+  try{
+    const response=await fetch('/api/research',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        query:prompt,
+        limit,
+        caseContext:c?{name:c.name,company:c.company,target:c.target,notes:c.notes||''}:null,
+        existingInvestors:state.investors.map(i=>({name:i.name,company:i.company}))
+      })
+    });
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(payload.error||'Research kunne ikke gennemføres');
+    researchResults=Array.isArray(payload.results)?payload.results:[];
+    state.researchResults=researchResults;
+    save();
+    researchBusy=false;
+    researchView();
+    const msg=$('#researchMessage'); if(msg) msg.textContent=payload.summary||'Research afsluttet.';
+  }catch(err){
+    researchBusy=false;
+    researchView();
+    const msg=$('#researchMessage');
+    if(msg) msg.textContent=location.hostname.endsWith('github.io')
+      ?'AI Research kræver server-backend. Koden er klar, men funktionen skal køres fra Vercel-versionen af appen.'
+      :(err.message||'Research fejlede.');
+  }
+}
+function addResearchCandidate(idx){
+  const r=researchResults[idx];if(!r)return;
+  const duplicate=state.candidates.some(c=>c.name.trim().toLowerCase()===(r.name||'').trim().toLowerCase());
+  if(duplicate){toast('Kandidaten findes allerede');return}
+  state.candidates.unshift({
+    id:'CAN-'+Date.now(),
+    name:r.name||'Ukendt',
+    company:r.company||'',
+    status:'Research',
+    notes:[r.rationale||'',r.capacity?('Kapacitet: '+r.capacity):'',r.sources?.length?('Kilder: '+r.sources.map(x=>x.url).join(' | ')):''].filter(Boolean).join('\n')
+  });
+  save();toast('Tilføjet til Candidate Pool');
+}
+
 function workView(){
   head('My Work','Execution','Dine åbne handlinger på tværs af cases.');
   const rows=state.matches.filter(m=>m.next).sort((a,b)=>{
@@ -185,6 +271,7 @@ function render(){
   if(current==='investors')investorsView($('#search').value);
   if(current==='candidates')candidatesView();
   if(current==='pipeline')pipelineView(currentCase);
+  if(current==='research')researchView();
   if(current==='work')workView();
 }
 
@@ -279,6 +366,7 @@ document.addEventListener('click',e=>{
   const ml=e.target.closest('[data-move-left]');if(ml){moveMatch(ml.dataset.moveLeft,-1);return}
   const mr=e.target.closest('[data-move-right]');if(mr){moveMatch(mr.dataset.moveRight,1);return}
   const cp=e.target.closest('[data-complete]');if(cp){completeMatch(cp.dataset.complete);return}
+  const rc=e.target.closest('[data-add-research-candidate]');if(rc){addResearchCandidate(Number(rc.dataset.addResearchCandidate));return}
 });
 
 $('#caseCreateForm').onsubmit=e=>{
