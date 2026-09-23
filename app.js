@@ -67,6 +67,8 @@ let current='dashboard';
 let currentCase=state.cases[0]?.id||'';
 let editing={type:null,id:null};
 let draggedMatchId=null;
+let addInvestorSelection=new Set();
+let addInvestorAvailable=[];
 const save=()=>localStorage.setItem(KEY,JSON.stringify(state));
 const inv=id=>state.investors.find(x=>x.id===id);
 const cas=id=>state.cases.find(x=>x.id===id);
@@ -220,17 +222,33 @@ function fillMatchForm(m){
   $('#matchEditTitle').textContent=(i?.name||'Investor')+' · '+(c?.name||'Case');
   f.status.value=m.status;f.priority.value=m.priority||'B';f.fit.value=m.fit||3;f.ticket.value=m.ticket||'';f.next.value=m.next||'';f.dueDate.value=m.dueDate||'';f.notes.value=m.notes||'';openModal('matchEditModal');
 }
+function renderAddInvestorChoices(){
+  const term=($('#addInvestorSearch')?.value||'').trim().toLowerCase();
+  const list=addInvestorAvailable.filter(i=>(i.name+' '+i.company).toLowerCase().includes(term));
+  const box=$('#addInvestorList');
+  box.innerHTML=list.map(i=>'<label class="checkrow"><input type="checkbox" value="'+esc(i.id)+'" '+(addInvestorSelection.has(i.id)?'checked':'')+'><span><b>'+esc(i.name)+'</b><small>'+esc(i.company||'Uden selskab')+'</small></span></label>').join('')||'<div class="empty">Ingen investorer matcher søgningen.</div>';
+  $('#addInvestorCount').textContent=addInvestorSelection.size+' valgt';
+  $('#addInvestorForm button[type="submit"]').disabled=addInvestorSelection.size===0;
+}
 function openAddInvestorToCase(caseId){
   editing={type:'addToCase',id:caseId};
   const existing=new Set(state.matches.filter(m=>m.caseId===caseId).map(m=>m.investorId));
-  const available=state.investors.filter(i=>!existing.has(i.id));
-  const sel=$('#addInvestorSelect');sel.innerHTML=available.map(i=>option(i.id,i.name+' — '+(i.company||'uden selskab'))).join('');
-  $('#addInvestorEmpty').classList.toggle('hidden',available.length>0);$('#addInvestorForm button[type="submit"]').disabled=!available.length;openModal('addInvestorModal');
+  addInvestorAvailable=state.investors.filter(i=>!existing.has(i.id)).sort((a,b)=>a.name.localeCompare(b.name,'da'));
+  addInvestorSelection=new Set();
+  $('#addInvestorSearch').value='';
+  $('#addInvestorEmpty').classList.toggle('hidden',addInvestorAvailable.length>0);
+  $('#addInvestorPicker').classList.toggle('hidden',addInvestorAvailable.length===0);
+  renderAddInvestorChoices();
+  openModal('addInvestorModal');
 }
 
 $$('.nav button').forEach(b=>b.onclick=()=>{current=b.dataset.v;render()});
 $('#quick').onclick=()=>openModal('quickModal');
 $('#search').oninput=e=>{current='investors';investorsView(e.target.value);nav()};
+$('#addInvestorSearch').oninput=renderAddInvestorChoices;
+$('#selectAllInvestors').onclick=()=>{addInvestorAvailable.forEach(i=>addInvestorSelection.add(i.id));renderAddInvestorChoices()};
+$('#clearInvestorSelection').onclick=()=>{addInvestorSelection.clear();renderAddInvestorChoices()};
+$('#addInvestorList').addEventListener('change',e=>{if(!e.target.matches('input[type="checkbox"]'))return;e.target.checked?addInvestorSelection.add(e.target.value):addInvestorSelection.delete(e.target.value);renderAddInvestorChoices()};
 
 document.addEventListener('click',e=>{
   const open=e.target.closest('[data-open]');if(open){openModal(open.dataset.open);return}
@@ -283,10 +301,11 @@ $('#matchEditForm').onsubmit=e=>{
   save();$('#matchEditModal').close();current='pipeline';currentCase=m.caseId;render();toast('Pipeline-kort opdateret');
 };
 $('#addInvestorForm').onsubmit=e=>{
-  e.preventDefault();const f=new FormData(e.target),caseId=editing.id,investorId=f.get('investorId');
-  if(!caseId||!investorId)return;
-  state.matches.push({id:'M'+Date.now(),caseId,investorId,status:'Not contacted',priority:'B',fit:3,ticket:'Ikke fastsat',next:'Definér næste handling',dueDate:'',notes:''});
-  save();$('#addInvestorModal').close();current='pipeline';currentCase=caseId;render();toast('Investor tilføjet til case');
+  e.preventDefault();const caseId=editing.id,ids=[...addInvestorSelection];
+  if(!caseId||!ids.length)return;
+  const stamp=Date.now();
+  ids.forEach((investorId,n)=>state.matches.push({id:'M'+stamp+'-'+n,caseId,investorId,status:'Not contacted',priority:'B',fit:3,ticket:'Ikke fastsat',next:'Definér næste handling',dueDate:'',notes:''}));
+  save();$('#addInvestorModal').close();current='pipeline';currentCase=caseId;render();toast(ids.length+' investorer tilføjet til case');
 };
 
 $('#deleteMatch').onclick=()=>{
